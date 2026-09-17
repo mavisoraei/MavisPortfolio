@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   description: "Adam Fay - Art Direction and Illustration",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
+      { url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/favicon.ico`, sizes: "any" },
       {
-        url: "/landing-pages/meng-to-sketchbook/assets/logo-adam.png",
+        url: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/landing-pages/meng-to-sketchbook/assets/logo-adam.png`,
         type: "image/png",
       },
     ],
