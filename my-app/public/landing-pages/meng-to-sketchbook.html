@@ -950,7 +950,7 @@ button{font:inherit}
 const Q=new URLSearchParams(location.search);
 const DIR='meng-to-sketchbook/';
 const PAGES=[1,2,3,4,5,6,7,8,9,10].map(n=>({
-  file:'assets/'+n+'.png',
+  file:'assets/'+n+'.webp',
   title:['Personal Work','Velma','Velma - Halloween Special','Fortnite x Marvel','Production Work - Misc','The Cuphead Show','Harley Quinn','Animaniacs','Final Space','Close Enough'][n-1],
   place:''
 }));
@@ -1508,16 +1508,18 @@ const GAL_FILES={
 function makeGallery(folder,label,files){
   const grid=el('div','pw-masonry');
   const items=[];
+  const imgs=[];
   const api={grid:grid,progress:null,layout:function(){}};
   files.forEach((f,fi)=>{
     const it=el('figure','pw-item');
     const im=new Image();im.loading='lazy';im.decoding='async';
-    im.src=DIR+'pic%20work/'+folder+'/'+encodeURIComponent(f);
+    im.dataset.src=DIR+'pic%20work/'+folder+'/'+encodeURIComponent(f);
     im.alt=label+' '+(fi+1);
     im.addEventListener('load',balance);
     im.addEventListener('error',balance);
     it.appendChild(im);
     items.push(it);
+    imgs.push(im);
   });
   function cols(){
     return matchMedia('(max-width:560px)').matches?1:matchMedia('(max-width:900px)').matches?2:3;
@@ -1567,6 +1569,12 @@ function makeGallery(folder,label,files){
     if(api.progress)api.progress.sync();
   }
   api.layout=layout;
+  api.mount=function(){
+    imgs.forEach(im=>{if(!im.getAttribute('src'))im.src=im.dataset.src;});
+  };
+  api.unmount=function(){
+    imgs.forEach(im=>{if(im.getAttribute('src'))im.removeAttribute('src');});
+  };
   return api;
 }
 
@@ -1653,6 +1661,15 @@ const VELMA_GROUPS=[
 ];
 let velmaPlate=null,velmaGroups=null;
 
+function syncVelmaPlate(){
+  if(!velmaPlate||!velmaGroups)return;
+  const open=velmaPlate.classList.contains('expanded');
+  velmaGroups.forEach(g=>{
+    if(open&&g.group.classList.contains('open'))g.state.mount();
+    else g.state.unmount();
+  });
+}
+
 function buildVelmaBox(){
   const box=el('div','velma-box');
   const acc=el('div','velma-accordion');
@@ -1681,7 +1698,10 @@ function buildVelmaBox(){
       head.setAttribute('aria-expanded',open?'true':'false');
       if(open){
         group.classList.remove('cue');                   /* first click answered: no more pulse */
+        state.mount();
         state.layout();                                 /* feed + balance the fresh grid */
+      }else{
+        state.unmount();
       }
       if(window.velmaBarUpdate)window.velmaBarUpdate();
     };
@@ -1815,11 +1835,18 @@ PAGES.forEach((p,i)=>{
     if(expandedPlate.el===li){
       li.classList.remove('expanded');
       expandedPlate.el=null;
+      if(galleryState[i])galleryState[i].unmount();
+      syncVelmaPlate();
     }else{
-      if(expandedPlate.el)expandedPlate.el.classList.remove('expanded');
+      if(expandedPlate.el){
+        const prev=[...plateList.children].indexOf(expandedPlate.el);
+        if(galleryState[prev])galleryState[prev].unmount();
+        expandedPlate.el.classList.remove('expanded');
+      }
       li.classList.add('expanded');
       expandedPlate.el=li;
-      if(galleryState[i])galleryState[i].layout();
+      if(galleryState[i]){galleryState[i].mount();galleryState[i].layout();}
+      syncVelmaPlate();
     }
   };
   li.appendChild(btn);
