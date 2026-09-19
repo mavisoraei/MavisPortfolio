@@ -807,11 +807,11 @@ button{font:inherit}
 <main class="page home">
 
   <section id="sketchbook" class="hero">
-    <img class="botany l" src="meng-to-sketchbook/botany-left.png" alt="" aria-hidden="true">
-    <img class="botany r" src="meng-to-sketchbook/botany-right.png" alt="" aria-hidden="true">
+    <img loading="lazy" decoding="async" class="botany l" src="meng-to-sketchbook/botany-left.png" alt="" aria-hidden="true">
+    <img loading="lazy" decoding="async" class="botany r" src="meng-to-sketchbook/botany-right.png" alt="" aria-hidden="true">
 
     <header class="top">
-      <img class="avatar" src="meng-to-sketchbook/adam-portrait.png?v=2" alt="Portrait of Adam Fay" width="1385" height="1136">
+      <img loading="lazy" decoding="async" class="avatar" src="meng-to-sketchbook/adam-portrait.png?v=2" alt="Portrait of Adam Fay" width="1385" height="1136">
       <div class="headline">
         <h1 class="name">Adam Fay</h1>
         <nav class="menu" aria-label="Main menu">
@@ -881,7 +881,7 @@ button{font:inherit}
       <p class="bio">Adam Fay is an Art Director and Lead Character Designer renowned for bringing creatures, bold personalities and vibrant worlds to life in animation. With over a decade of experience, Adam's journey has taken him through beloved animated series including Velma, Harley Quinn, The Cuphead Show!, Final Space, Close Enough, and more, making him a major creative force behind adult animation's growing artistic depth.</p>
       <p class="bio" style="margin-top:1em">As an Art Director at Titmouse, and Assistant Art Director and Lead Character Designer on Velma, Adam pushed forward a style infused with expressive realism, grounded anatomy, and heightened emotion marking a pivotal moment in his career. He is currently developing a new show at Amazon MGM Studios / Prime Video.</p>
     </div>
-    <img class="bloom" src="meng-to-sketchbook/bloom.png" alt="" aria-hidden="true">
+    <img loading="lazy" decoding="async" class="bloom" src="meng-to-sketchbook/bloom.png" alt="" aria-hidden="true">
   </section>
 
   <div id="resume" class="anchor"></div>
@@ -936,7 +936,7 @@ button{font:inherit}
   <button class="resume-close" id="resumeClose" aria-label="Close resume">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5 15.5 15.5M15.5 4.5 4.5 15.5"/></svg>
   </button>
-  <img class="resume-img" src="meng-to-sketchbook/assets/Resume.jpg" alt="Adam Fay — Resume">
+  <img loading="lazy" decoding="async" class="resume-img" src="meng-to-sketchbook/assets/Resume.jpg" alt="Adam Fay — Resume">
 </div>
 
 <script>
@@ -1957,7 +1957,7 @@ endIntro=function(){origEndIntro();setTimeout(startAutoFlip,500);};
     lb.setAttribute('aria-label','Image viewer');
     lb.innerHTML='<button class="lb-close" type="button" aria-label="Close">&times;</button>'+
       '<button class="lb-prev" type="button" aria-label="Previous image">&lsaquo;</button>'+
-      '<figure class="lb-frame"><img class="lb-img" alt=""></figure>'+
+      '<figure class="lb-frame"><img loading="lazy" decoding="async" class="lb-img" alt=""></figure>'+
       '<button class="lb-next" type="button" aria-label="Next image">&rsaquo;</button>';
     document.body.appendChild(lb);
     closeBtn=lb.querySelector('.lb-close');
