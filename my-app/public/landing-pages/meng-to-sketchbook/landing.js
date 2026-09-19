@@ -931,6 +931,7 @@ function endIntro(){
   introOn=false;wrap.classList.remove('intro','b2');
 }
 function riffleStep(){
+  prime((idx+1)%M);prime((idx+2)%M);   /* stay one turn ahead of the riffle */
   const s=riffle[riffleAt];
   wrap.classList.toggle('b2',s.bell>0.55);
   startTurn('next',0);
@@ -958,15 +959,14 @@ function startIntro(){
 (async function boot(){
   idx=Q.has('shot')?(parseInt(Q.get('shot'),10)||0)%M:0;
   paint();applyView();
-  /* preload and decode every spread up front so the intro riffle and manual
-     turns never stall on a missing frame (soft 3s cap so the book still
-     becomes interactive if a request hangs). The gallery and plate images
-     below stay lazy and only fetch when a plate expands/scrolls near. */
+  /* Optimised boot (progressive frame preload): every spread is *requested*
+     right away so the CDN/cache is warm for the riffle and auto-flip, but
+     readiness only blocks on decoding the two pages the opening flip renders
+     (current + next). The rest stream in while the intro plays, so the book
+     is interactive well under 3s instead of waiting on all 10 decodes. */
   const all=PAGES.map((p,n)=>prime(n));
-  await Promise.race([
-    Promise.allSettled(all.map(im=>im.decode?im.decode().catch(()=>{}):new Promise(r=>{im.onload=im.onerror=r}))),
-    new Promise(r=>setTimeout(r,3000))
-  ]);
+  const settle=im=>im.decode?im.decode().catch(()=>{}):new Promise(r=>{im.onload=im.onerror=r});
+  await Promise.all([settle(all[idx]),settle(all[(idx+1)%M])]);
   if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
   syncZoom();restLoupe();
   document.body.dataset.ready='1';
