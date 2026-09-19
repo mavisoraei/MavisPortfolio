@@ -32,7 +32,7 @@ let strips=[];         /* the chain, kept for per-frame lighting       */
 function el(t,c){const e=document.createElement(t);if(c)e.className=c;return e}
 function imgEl(i,side){
   const im=new Image();im.className='sb-half-img '+side;
-  im.loading='lazy';im.decoding='async';
+  im.decoding='async';
   im.draggable=false;im.alt='';im.src=PAGES[i].url;return im;
 }
 function prime(n){
@@ -100,7 +100,7 @@ function paint(){
   book.textContent='';
   if(!turn){
     const f=el('div','sb-full');
-    const im=new Image();im.loading='lazy';im.decoding='async';im.src=PAGES[idx].url;im.alt=PAGES[idx].title;
+    const im=new Image();im.decoding='async';im.src=PAGES[idx].url;im.alt=PAGES[idx].title;
     im.draggable=false;
     f.appendChild(im);book.appendChild(f);
     sb3d.style.setProperty('--shade','0');
@@ -885,7 +885,7 @@ PAGES.forEach((p,i)=>{
     content.appendChild(vb.box);
     velmaGroups=vb.groups;
   }else{
-    const img=new Image();img.src=p.url;img.alt=p.title;img.className='plate-preview';
+    const img=new Image();img.loading='lazy';img.decoding='async';img.src=p.url;img.alt=p.title;img.className='plate-preview';
     content.appendChild(img);
   }
   expand.appendChild(content);
@@ -943,7 +943,7 @@ function riffleStep(){
 }
 function startIntro(){
   const coarse=matchMedia('(max-width: 640px), (pointer: coarse)').matches;
-  if(coarse||REDUCED||Q.has('nointro')){idx=LAND;paint();return;}
+  if(coarse||REDUCED||Q.has('nointro')){idx=LAND;paint();setTimeout(startAutoFlip,4000);return;}
   const steps=M+LAND;
   riffle=[];
   for(let r=0;r<steps;r++){
@@ -958,8 +958,15 @@ function startIntro(){
 (async function boot(){
   idx=Q.has('shot')?(parseInt(Q.get('shot'),10)||0)%M:0;
   paint();applyView();
-  const im=new Image();im.loading='lazy';im.decoding='async';im.src=PAGES[idx].url;
-  await (im.decode?im.decode().catch(()=>{}):new Promise(r=>{im.onload=im.onerror=r}));
+  /* preload and decode every spread up front so the intro riffle and manual
+     turns never stall on a missing frame (soft 3s cap so the book still
+     becomes interactive if a request hangs). The gallery and plate images
+     below stay lazy and only fetch when a plate expands/scrolls near. */
+  const all=PAGES.map((p,n)=>prime(n));
+  await Promise.race([
+    Promise.allSettled(all.map(im=>im.decode?im.decode().catch(()=>{}):new Promise(r=>{im.onload=im.onerror=r}))),
+    new Promise(r=>setTimeout(r,3000))
+  ]);
   if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
   syncZoom();restLoupe();
   document.body.dataset.ready='1';
@@ -967,17 +974,7 @@ function startIntro(){
     if(Q.has('t')){startTurn(Q.get('dir')||'next',parseFloat(Q.get('t')));}
     return;
   }
-  /* first paint only loads the current spread; the other "slide" pages are
-     NOT fetched until the user actually interacts or scrolls, keeping the
-     single-page load fast. Once they do, the rest are primed off-screen. */
-  let began=false;
-  function begin(){
-    if(began)return;began=true;
-    ['pointerdown','keydown','wheel','touchstart','scroll'].forEach(e=>removeEventListener(e,begin));
-    PAGES.forEach((p,n)=>{if(!p._img)prime(n);});
-    startIntro();
-  }
-  ['pointerdown','keydown','wheel','touchstart','scroll'].forEach(e=>addEventListener(e,begin,{passive:true,once:true}));
+  startIntro();
 })();
 
 /* --------------------------------------------------- auto-flip timer */
@@ -1003,8 +1000,8 @@ stage.addEventListener('pointerdown',pauseAutoFlip);
 stage.addEventListener('pointerup',()=>{
   setTimeout(resumeAutoFlip,1000);
 });
-/* auto-flip only ever starts after interactivity begins (intro runs on a
-   user gesture now), so hidden slides are never fetched during first paint */
+/* auto-flip begins once the intro finishes, or shortly after load when the
+   intro is skipped for coarse/reduced-motion visitors */
 const origEndIntro=endIntro;
 endIntro=function(){origEndIntro();setTimeout(startAutoFlip,500);};
 /* ---- mobile-only floating ↑: appears only while a plate is open and the
