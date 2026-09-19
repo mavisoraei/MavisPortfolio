@@ -14,6 +14,9 @@ const PAGES=[1,2,3,4,5,6,7,8,9,10].map(n=>({
 }));
 PAGES.forEach(p=>p.url=DIR+p.file);
 const M=PAGES.length, LAND=6;
+/* log instead of silently freezing — any runtime error anywhere is surfaced */
+window.addEventListener('error',e=>console.error('[sketchbook] runtime error:',e.error||e.message));
+window.addEventListener('unhandledrejection',e=>console.error('[sketchbook] unhandled rejection:',e.reason));
 
 const wrap=document.getElementById('sbWrap');
 const stage=document.getElementById('sbStage');
@@ -936,10 +939,16 @@ function riffleStep(){
   wrap.classList.toggle('b2',s.bell>0.55);
   startTurn('next',0);
   tweenTo(1,s.dur,()=>{
-    idx=turn.to;turn=null;
-    riffleAt++;
-    if(introOn&&riffleAt<riffle.length){paint();riffleStep();}
-    else{endIntro();paint();}
+    try{
+      idx=turn.to;turn=null;
+      riffleAt++;
+      if(introOn&&riffleAt<riffle.length){paint();riffleStep();}
+      else{endIntro();paint();}
+    }catch(err){
+      console.error('[sketchbook] riffle step error:',err);
+      try{endIntro();paint();}catch(_e){/* already surfaced */}
+      if(typeof startAutoFlip==='function')startAutoFlip();
+    }
   });
 }
 function startIntro(){
@@ -957,24 +966,28 @@ function startIntro(){
 
 /* ------------------------------------------------------------- boot */
 (async function boot(){
-  idx=Q.has('shot')?(parseInt(Q.get('shot'),10)||0)%M:0;
-  paint();applyView();
-  /* Optimised boot (progressive frame preload): every spread is *requested*
-     right away so the CDN/cache is warm for the riffle and auto-flip, but
-     readiness only blocks on decoding the two pages the opening flip renders
-     (current + next). The rest stream in while the intro plays, so the book
-     is interactive well under 3s instead of waiting on all 10 decodes. */
-  const all=PAGES.map((p,n)=>prime(n));
-  const settle=im=>im.decode?im.decode().catch(()=>{}):new Promise(r=>{im.onload=im.onerror=r});
-  await Promise.all([settle(all[idx]),settle(all[(idx+1)%M])]);
-  if(document.fonts&&document.fonts.ready)await document.fonts.ready.catch(()=>{});
-  syncZoom();restLoupe();
-  document.body.dataset.ready='1';
-  if(Q.has('shot')){
-    if(Q.has('t')){startTurn(Q.get('dir')||'next',parseFloat(Q.get('t')));}
-    return;
+  try{
+    idx=Q.has('shot')?(parseInt(Q.get('shot'),10)||0)%M:0;
+    paint();applyView();
+    /* Immediate kickoff — the riffle starts as soon as frames 1-2 are
+       attached; nothing network-side (fonts, decodes, 3.webp..10.webp) is
+       awaited. Only the two opening frames are primed here; every later
+       spread is fetched progressively as the animation advances to it. */
+    prime(idx);prime((idx+1)%M);
+    syncZoom();restLoupe();
+    document.body.dataset.ready='1';
+    if(Q.has('shot')){
+      if(Q.has('t')){startTurn(Q.get('dir')||'next',parseFloat(Q.get('t')));}
+      return;
+    }
+    startIntro();
+  }catch(err){
+    console.error('[sketchbook] boot error:',err);
+    try{
+      document.body.dataset.ready='1';
+      if(!Q.has('shot')){idx=Math.max(0,idx||0);paint();startIntro();}
+    }catch(e2){console.error('[sketchbook] riffle recovery failed:',e2);}
   }
-  startIntro();
 })();
 
 /* --------------------------------------------------- auto-flip timer */

@@ -37,6 +37,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         as="image"
         href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/landing-pages/meng-to-sketchbook/bg-wash.webp`}
       />
+      <link
+        rel="preload"
+        as="image"
+        href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/landing-pages/meng-to-sketchbook/assets/1.webp`}
+      />
+      <link
+        rel="preload"
+        as="image"
+        href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/landing-pages/meng-to-sketchbook/assets/2.webp`}
+      />
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

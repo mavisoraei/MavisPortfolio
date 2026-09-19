@@ -32,12 +32,9 @@ const FONT_STACKS: Record<string, string> = {
   geist: "Geist, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
 };
 
-const FONT_HREFS: Record<string, string | undefined> = {
-  "instrument-serif": "https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap",
-  newsreader: "https://fonts.googleapis.com/css2?family=Newsreader:wght@200..700&display=swap",
-  geist: "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap",
-};
-
+/* The landing page self-hosts Instrument Serif + Newsreader via @font-face,
+   so no Google Fonts stylesheet is ever injected — an external css2 request
+   used to fail and stall the riffle's document.fonts.ready handshake. */
 function buildCustomizationCss(props: MengToSketchbookLandingPageProps) {
   const heading =
     props.headingFont && FONT_STACKS[props.headingFont]
@@ -111,15 +108,8 @@ body { font-family: ${FONT_STACKS[body]}; font-weight: ${bodyWeight}; }
 `;
 }
 
-function fontHrefFor(props: MengToSketchbookLandingPageProps) {
-  const candidates = [props.headingFont, props.bodyFont];
-  const hrefs = candidates.map((f) => (f ? FONT_HREFS[f] : undefined)).filter(Boolean);
-  if (!hrefs.length) return undefined;
-  return hrefs.length === 1
-    ? hrefs[0]
-    : `https://fonts.googleapis.com/css2?${hrefs
-        .map((h) => h!.split("family=")[1].split("&")[0])
-        .join("&")}&display=swap`;
+function fontHrefFor(_props: MengToSketchbookLandingPageProps) {
+  return undefined; /* local @font-face covers all three faces */
 }
 
 function applyCustomization(
