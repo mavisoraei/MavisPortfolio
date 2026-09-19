@@ -969,11 +969,18 @@ function startIntro(){
   try{
     idx=Q.has('shot')?(parseInt(Q.get('shot'),10)||0)%M:0;
     paint();applyView();
-    /* Immediate kickoff — the riffle starts as soon as frames 1-2 are
-       attached; nothing network-side (fonts, decodes, 3.webp..10.webp) is
-       awaited. Only the two opening frames are primed here; every later
-       spread is fetched progressively as the animation advances to it. */
-    prime(idx);prime((idx+1)%M);
+    /* Restored intro handshake: warm the whole spread deck in the
+       background so every riffle step finds a cached frame, but only WAIT
+       on decoding the two opening pages (race-capped at 1.5s) so the
+       riffle opens on real artwork instead of blank paper, and a hung
+       request can never stall first paint. Nothing else — fonts, decodes,
+       3.webp..10.webp — is ever awaited. */
+    for(let n=0;n<M;n++)prime(n);
+    const settle=im=>im.decode?im.decode().catch(()=>{}):new Promise(r=>{im.onload=im.onerror=r});
+    await Promise.race([
+      Promise.all([settle(prime(idx)),settle(prime((idx+1)%M))]),
+      new Promise(r=>setTimeout(r,1500))
+    ]);
     syncZoom();restLoupe();
     document.body.dataset.ready='1';
     if(Q.has('shot')){

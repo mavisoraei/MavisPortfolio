@@ -178,12 +178,19 @@ export function MengToSketchbookLandingPage(props: MengToSketchbookLandingPagePr
 
   useEffect(() => {
     apply(frameRef.current);
-    // If the frame finished loading before hydration attached its onLoad
-    // listener, treat it as ready here instead of waiting on the event.
+    // Reveal as soon as the sketchbook document is interactive — its deferred
+    // landing.js has by then painted the first page and kicked off the intro
+    // riffle. Waiting for the iframe's full `load` (all eager images + defer
+    // scripts) would keep the book hidden while the riffle is at its busiest.
     const frame = frameRef.current;
     const frameDocument = frame?.contentDocument;
-    if (frameDocument && frameDocument.readyState === "complete") {
-      setReady(true);
+    if (!frameDocument) return;
+    const markReady = () => setReady(true);
+    if (frameDocument.readyState === "complete" || frameDocument.readyState === "interactive") {
+      markReady();
+    } else {
+      frameDocument.addEventListener("DOMContentLoaded", markReady);
+      return () => frameDocument.removeEventListener("DOMContentLoaded", markReady);
     }
   }, [apply]);
 
