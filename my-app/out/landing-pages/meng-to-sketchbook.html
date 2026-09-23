@@ -1123,5 +1123,49 @@ button{font:inherit}
 </div>
 
 <script defer src="meng-to-sketchbook/landing.js"></script>
+<script>
+(function(){
+  function apply(el){
+    if(el.nodeType!==1)return;
+    var s=el.style;
+    if(el.classList&&el.classList.contains('sb-arrow')){
+      s.setProperty('color','#ffffff','important');
+      s.setProperty('opacity','1','important');
+      s.setProperty('filter','drop-shadow(0 2px 4px rgba(0,0,0,0.8))','important');
+    }
+    if(el.id==='heroDown'){
+      s.setProperty('color','#ffffff','important');
+      s.setProperty('opacity','1','important');
+      s.setProperty('animation','none','important');
+    }
+    if(el.classList&&el.classList.contains('sb-tools')){
+      s.setProperty('background','rgba(50,42,35,0.95)','important');
+      s.setProperty('border-color','rgba(255,253,249,0.5)','important');
+    }
+    if(el.matches&&(el.matches('.sb-tools svg')||el.matches('.sb-tools .zoom-icon'))){
+      s.setProperty('color','#fffdf9','important');
+      s.setProperty('opacity','1','important');
+    }
+    if(el.matches&&el.matches('.sb-tools .zoom-read')){
+      s.setProperty('color','#e0dcd5','important');
+      s.setProperty('opacity','1','important');
+    }
+  }
+  function scan(root){
+    if(root.querySelectorAll){
+      root.querySelectorAll('.sb-arrow,#heroDown,.sb-tools').forEach(apply);
+      root.querySelectorAll('.sb-tools svg,.sb-tools .zoom-icon,.sb-tools .zoom-read').forEach(apply);
+    }
+    apply(root);
+  }
+  scan(document);
+  new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      if(m.addedNodes){m.addedNodes.forEach(function(n){if(n.nodeType===1)scan(n);});}
+    });
+  }).observe(document.documentElement,{childList:true,subtree:true});
+  window.addEventListener('load',function(){scan(document);});
+})();
+</script>
 </body>
 </html>
