@@ -1472,57 +1472,28 @@ endIntro=function(){origEndIntro();setTimeout(startAutoFlip,500);};
     elapsed+=lineDuration+Math.max(LINE_GAP,0);
     charDelays.push(delays);
   });
-  function reveal(){
-    tokens.forEach(function(line,li){
-      var host=containers[li];
-      host.classList.add('bio-glow');
-      line.forEach(function(token,ti){
-        if(token.isSpace){
-          var sp=document.createElement('span');
-          sp.textContent=token.text;
-          host.appendChild(sp);
-          return;
-        }
-        var word=document.createElement('span');
-        word.className='glowing-text-word';
-        Array.from(token.text).forEach(function(ch,ci){
-          var c=document.createElement('span');
-          c.className='glowing-text-char';
-          c.setAttribute('aria-hidden','true');
-          c.style.setProperty('--char-delay',charDelays[li][token.start+ci].toFixed(2)+'s');
-          c.style.setProperty('--char-duration',DURATION.toFixed(2)+'s');
-          c.textContent=ch;
-          word.appendChild(c);
-        });
-        host.appendChild(word);
+  tokens.forEach(function(line,li){
+    var host=containers[li];
+    host.classList.add('bio-glow');
+    line.forEach(function(token,ti){
+      if(token.isSpace){
+        var sp=document.createElement('span');
+        sp.textContent=token.text;
+        host.appendChild(sp);
+        return;
+      }
+      var word=document.createElement('span');
+      word.className='glowing-text-word';
+      Array.from(token.text).forEach(function(ch,ci){
+        var c=document.createElement('span');
+        c.className='glowing-text-char';
+        c.setAttribute('aria-hidden','true');
+        c.style.setProperty('--char-delay',charDelays[li][token.start+ci].toFixed(2)+'s');
+        c.style.setProperty('--char-duration',DURATION.toFixed(2)+'s');
+        c.textContent=ch;
+        word.appendChild(c);
       });
+      host.appendChild(word);
     });
-  }
-  function printPlain(){
-    containers.forEach(function(host,li){
-      host.textContent=tokens[li].map(function(t){return t.text;}).join('');
-    });
-  }
-  /* reduced motion: no flicker — just show the full paragraphs */
-  if(REDUCED){printPlain();return;}
-  /* kick the reveal only once the section is actually on screen, so the
-     bio never sits half-rendered for a visitor scrolling down late, and a
-     safety net guarantees the text can't stay invisible. */
-  var about=document.getElementById('about');
-  var revealed=false, io=null;
-  function revealOnce(){
-    if(revealed)return;
-    revealed=true;
-    if(io)io.disconnect();
-    reveal();
-  }
-  if(about&&'IntersectionObserver' in window){
-    io=new IntersectionObserver(function(entries){
-      entries.forEach(function(e){if(e.isIntersecting)revealOnce();});
-    },{rootMargin:'0px 0px -12% 0px',threshold:0.1});
-    io.observe(about);
-    setTimeout(revealOnce,3000);
-  }else{
-    revealOnce();
-  }
+  });
 })();
