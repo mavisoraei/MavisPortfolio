@@ -7,7 +7,7 @@
 <meta name="description" content="Adam Fay - Art Direction and Illustration">
 <link rel="icon" type="image/png" href="meng-to-sketchbook/assets/logo-adam.png">
 <link rel="apple-touch-icon" href="meng-to-sketchbook/assets/logo-adam.png">
-<link rel="preload" as="image" href="meng-to-sketchbook/bg-wash.webp">
+<link rel="preload" as="image" href="meng-to-sketchbook/assets/faza.webp">
 <link rel="preload" as="image" href="meng-to-sketchbook/assets/1.webp">
 <link rel="preload" as="image" href="meng-to-sketchbook/assets/2.webp">
 <style>
@@ -19,11 +19,11 @@
   src:url(meng-to-sketchbook/newsreader.woff2) format('woff2')}
 
 :root{
-  --paper:#ece7dc;
-  --ink:#2b2721;
-  --ink-soft:rgba(43,39,33,.58);
-  --ink-faint:rgba(43,39,33,.36);
-  --hairline:rgba(43,39,33,.14);
+  --paper:#141210;
+  --ink:#ffffff;
+  --ink-soft:#e5e7eb;
+  --ink-faint:#d1d5db;
+  --hairline:rgba(255,255,255,.22);
   --earth:#9a6a3e;
   --accent:#c3574b;
   --display:'Instrument Serif',"New York",Georgia,'Times New Roman',serif;
@@ -40,17 +40,63 @@ body{
 }
 a{color:inherit;text-decoration:none}
 button{font:inherit}
-::selection{background:rgba(43,39,33,.85);color:var(--paper)}
+::selection{background:rgba(255,255,255,.9);color:#141210}
 
 /* the painted ground the whole page sits on */
 .wash{
   position:fixed;inset:0;z-index:-2;pointer-events:none;
-  background:url(meng-to-sketchbook/bg-wash.webp) center top / cover no-repeat;
+  background-image:url(meng-to-sketchbook/assets/faza.webp);
+  background-position:top center;
+  background-size:cover;
+  background-repeat:no-repeat;
   opacity:.85;
 }
 .wash:after{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(236,231,220,.25) 0%,rgba(236,231,220,.72) 58%,var(--paper) 88%);
+  background:linear-gradient(180deg,rgba(0,0,0,.25) 0%,rgba(0,0,0,.72) 58%,#000 88%);
+}
+/* ---- bulb-only glow over the painted lamp filaments ----
+   No artificial cones or overlay light shapes: the painted background
+   (faza) already carries the cone visuals, so we only add a soft
+   elliptical glow sitting right over each filament.  Positions are
+   vw/vh-derived so they ride along with the cover-cropped background. */
+.lamp-lights{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  overflow:hidden;
+}
+.lamp{
+  position:absolute;top:16vh;width:0;height:0;
+}
+/* pulled slightly inward so the glow centers on the painted bulbs */
+.lamp.l{left:19vw}
+.lamp.r{right:19vw}
+/* soft elliptical filament glow — no rectangle borders, no cone edges */
+.lamp .bulb{
+  position:absolute;top:0;left:0;transform:translate(-50%,-50%);
+  width:24px;height:50px;border-radius:50%;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%,
+    rgba(255,200,100,.7) 0%,
+    rgba(255,200,100,.32) 42%,
+    rgba(255,200,100,0) 72%);
+  filter:blur(8px);
+  mix-blend-mode:screen;
+  will-change:opacity;
+}
+/* subtle natural flicker on the glowing filament only */
+.lamp .bulb{animation:naturalFlicker 10s ease-in-out infinite}
+.lamp.r .bulb{animation-delay:-3.7s}
+@keyframes naturalFlicker{
+  0%,12%,100%{opacity:1}
+  16%,18%{opacity:.72}
+  22%,84%,90%{opacity:.97}
+  28%,30%{opacity:.8}
+  38%,52%,66%,94%{opacity:1}
+  56%,58%{opacity:.62}
+  74%,78%{opacity:1}
+  96%,98%{opacity:.75}
+}
+@media (prefers-reduced-motion:reduce){
+  .lamp .bulb{animation:none}
 }
 
 /* ---------------- top block: avatar + title + nav ---------------- */
@@ -76,18 +122,18 @@ button{font:inherit}
   display:flex;align-items:center;justify-content:center;
   gap:clamp(13px,1.6vw,24px);
   font-size:14px;letter-spacing:var(--track-nav);font-weight:400;
-  background:rgba(255,255,255,.25);
+  background:rgba(0,0,0,.42);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,.4);
+  border:1px solid rgba(255,255,255,.18);
   border-radius:30px;
   padding:8px 20px;
-  box-shadow:0 4px 15px rgba(0,0,0,.05);
+  box-shadow:0 4px 15px rgba(0,0,0,.3);
   opacity:.35;
   transition:opacity .3s ease;
 }
 .top .menu.scrolled{opacity:.95}
 .top .menu a.link{color:var(--ink);opacity:.88;transition:opacity .2s,color .2s}
-.top .menu a.link:hover{opacity:1;color:var(--earth)}
+.top .menu a.link:hover{opacity:1;color:#d4a373}
 .top .menu a[aria-current]{color:var(--earth);opacity:1}
 .top .menu .menu-sep{width:1px;height:13px;background:var(--hairline)}
 .top .menu .top-socials{display:flex;align-items:center;gap:12px}
@@ -141,11 +187,11 @@ button{font:inherit}
   position:absolute;top:50%;transform:translateY(-50%);
   display:inline-flex;align-items:center;justify-content:center;
   width:44px;height:44px;padding:0;
-  border:0;background:transparent;color:var(--ink);opacity:.85;cursor:pointer;
+  border:0;background:transparent;color:#f2e8d5;opacity:1;cursor:pointer;
   transition:color .2s,opacity .2s;
   -webkit-tap-highlight-color:transparent;z-index:90;
 }
-.sb-arrow:hover{color:var(--ink);opacity:1}
+.sb-arrow:hover{color:#fff8ec;opacity:1}
 .sb-arrow.left{left:-65px}
 .sb-arrow.right{right:-65px}
 
@@ -348,22 +394,22 @@ button{font:inherit}
 .sb-tools{
   position:relative;z-index:200;
   display:flex;align-items:center;gap:6px;
-  border:1px solid var(--hairline);border-radius:999px;
-  padding:5px 7px;background:rgba(250,246,238,.62);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.28);border-radius:999px;
+  padding:5px 7px;background:rgba(255,247,236,.10);
+  -webkit-backdrop-filter:blur(10px) saturate(1.1);backdrop-filter:blur(10px) saturate(1.1);
 }
 .tool{
   width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;
   border:0;border-radius:50%;background:transparent;color:var(--ink-soft);
   cursor:pointer;transition:background-color .18s ease,color .18s ease;
 }
-.tool:hover{background:rgba(255,252,244,.9);color:var(--ink)}
+.tool:hover{background:rgba(255,255,255,.14);color:var(--ink)}
 .tool[aria-pressed="true"]{background:rgba(154,106,62,.16);color:var(--earth)}
 .tool:disabled{opacity:.32;cursor:default;background:transparent}
 .tool svg{width:15px;height:15px;display:block}
 .tool-sep{width:1px;height:17px;background:var(--hairline);margin:0 2px}
 .zoom-read{
-  font-size:11px;letter-spacing:.1em;color:var(--ink-faint);
+  font-size:11px;letter-spacing:.1em;color:var(--ink-soft);
   min-width:40px;text-align:center;font-variant-numeric:tabular-nums;
 }
 @media (pointer:coarse){.loupe{display:none}}
@@ -385,7 +431,7 @@ button{font:inherit}
   display:flex;align-items:center;justify-content:center;
   gap:clamp(10px,1.6vw,22px);flex-wrap:wrap;
   font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-  color:#7d7d7d;opacity:.75;white-space:nowrap;
+  color:#d1d5db;opacity:.75;white-space:nowrap;
 }
 .sb-wrap.intro .sb-full img,.sb-wrap.intro .sb-half-img{filter:url(#sb-mblur-1)}
 .sb-wrap.intro.b2 .sb-full img,.sb-wrap.intro.b2 .sb-half-img{filter:url(#sb-mblur-2)}
@@ -415,7 +461,7 @@ button{font:inherit}
   background:var(--paper);color:var(--ink);
   border-radius:16px;
   padding:clamp(24px,3.2vw,34px);
-  border:1px solid rgba(255,252,244,.6);
+  border:1px solid rgba(255,255,255,.16);
   box-shadow:0 34px 70px rgba(43,39,33,.32),0 8px 20px rgba(43,39,33,.18);
   transform:translateY(14px) scale(.985);transition:transform .3s ease;
 }
@@ -426,7 +472,7 @@ button{font:inherit}
   border:0;border-radius:50%;background:transparent;color:var(--ink-soft);cursor:pointer;
   transition:background-color .18s ease,color .18s ease;
 }
-.modal-close:hover{background:rgba(255,252,244,.85);color:var(--ink)}
+.modal-close:hover{background:rgba(255,255,255,.12);color:var(--ink)}
 .modal-close svg{width:16px;height:16px}
 .modal h2{
   font-family:var(--display);font-weight:400;
@@ -439,13 +485,13 @@ button{font:inherit}
 .field label .req{color:var(--earth)}
 .field input,.field textarea{
   width:100%;font:inherit;font-size:16px;color:var(--ink);
-  background:rgba(255,252,244,.55);border:1px solid var(--hairline);
+  background:rgba(255,255,255,.08);border:1px solid var(--hairline);
   border-radius:9px;padding:11px 13px;outline:0;resize:vertical;
   transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;
 }
-.field input::placeholder,.field textarea::placeholder{color:rgba(43,39,33,.34)}
+.field input::placeholder,.field textarea::placeholder{color:rgba(255,255,255,.4)}
 .field input:focus,.field textarea:focus{
-  border-color:rgba(154,106,62,.55);background:rgba(255,252,244,.85);
+  border-color:rgba(154,106,62,.55);background:rgba(255,255,255,.12);
   box-shadow:0 0 0 3px rgba(154,106,62,.14);
 }
 .field.invalid input,.field.invalid textarea{border-color:rgba(178,63,49,.6)}
@@ -456,7 +502,7 @@ button{font:inherit}
   padding:12px 30px;cursor:pointer;
   transition:background-color .2s ease,transform .15s ease,box-shadow .2s ease;
 }
-.modal .submit:hover{background:var(--earth);box-shadow:0 10px 20px rgba(154,106,62,.3)}
+.modal .submit:hover{background:#c9854f;box-shadow:0 10px 20px rgba(154,106,62,.3)}
 .modal .submit:active{transform:translateY(1px)}
 .modal .sent{display:none;text-align:center;padding:10px 4px 4px}
 .modal.sent .modal-form{display:none}
@@ -509,25 +555,70 @@ button{font:inherit}
   padding:0 clamp(20px,5vw,48px);
   display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(24px,5vw,60px);align-items:start;
 }
-.bio{font-size:clamp(17px,1.7vw,20px);line-height:1.74;letter-spacing:.005em;margin:0;font-weight:300;max-width:56ch}
-.bio-link{color:var(--ink);text-decoration:underline;text-decoration-color:rgba(43,39,33,.28);
+.about>div{min-width:0;overflow:visible}
+.bio{
+  max-width:550px !important;
+  min-width:0;
+  white-space:normal !important;
+  word-break:break-word !important;
+  overflow-wrap:anywhere !important;
+  display:block !important;
+  margin:0;
+  font-family:var(--font);
+  font-size:clamp(1rem,1.6vw,1.15rem);
+  line-height:1.7;
+  letter-spacing:.005em;
+  font-weight:300;
+  text-align:left;
+  background:transparent;
+}
+.bio + .bio{margin-top:1em}
+.bio-link{color:var(--ink);text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);
   text-underline-offset:4px;transition:text-decoration-color .2s}
 .bio-link:hover{text-decoration-color:var(--ink)}
-.bloom{width:clamp(150px,17vw,260px);opacity:.9;user-select:none;align-self:center}
+
+/* ---- glowing bio text (char-by-char reveal) ---- */
+.bio-glow{opacity:1}
+.bio-glow{
+  display:block;
+  --glow-text:#e6ddc9;
+  --glow-text-dim-end:#e6ddc9;
+  --glow-soft:rgba(255,255,255,.336);
+  --glow-hard:rgba(255,255,255,.63);
+  --glow-settled-weight:300;
+}
+.glowing-text-word{display:inline-block}
+.glowing-text-char{
+  display:inline-block;color:var(--glow-text);opacity:0;
+  font-weight:var(--glow-settled-weight);
+  animation:glowing-char-reveal var(--char-duration) ease-out var(--char-delay) forwards;
+}
+@keyframes glowing-char-reveal{
+  0%{color:var(--glow-text);opacity:0;text-shadow:none}
+  55%{color:var(--glow-text);opacity:1;
+    text-shadow:0 0 7px var(--glow-hard),0 0 18px var(--glow-hard),0 0 34px var(--glow-hard)}
+  100%{color:var(--glow-text);opacity:1;text-shadow:none}
+}
+.bloom{width:clamp(150px,17vw,260px);height:auto;object-fit:contain;opacity:.9;user-select:none;align-self:center}
 @media (max-width:760px){
   .about{grid-template-columns:1fr}
   .bloom{width:170px;justify-self:center}
 }
 
 .plates{max-width:1080px;margin:0 auto;padding:0 clamp(20px,5vw,48px)}
-.plate-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--hairline)}
+.plate-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--hairline);
+  display:flex;flex-direction:column;gap:6px}
 .plate{
   display:grid;grid-template-columns:3.4em minmax(0,1fr) auto;gap:18px;align-items:baseline;
-  width:100%;padding:15px 4px;border:0;border-bottom:1px solid var(--hairline);
-  background:transparent;text-align:left;cursor:pointer;color:inherit;
-  transition:background-color .22s ease,padding-left .22s ease;
+  width:100%;padding:11px 16px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.045);text-align:left;cursor:pointer;color:inherit;
+  border-radius:12px;
+  transition:background-color .22s ease,padding-left .22s ease,border-color .22s ease,box-shadow .22s ease;
 }
-.plate:hover,.plate[aria-current="true"]{background:rgba(255,252,244,.5);padding-left:12px}
+.plate:hover,.plate[aria-current="true"]{
+  background:rgba(255,255,255,.12);color:#ffffff;padding-left:22px;
+  border-color:rgba(255,255,255,.3);box-shadow:0 4px 18px rgba(0,0,0,.18);
+}
 .plate .n{font-size:12px;color:var(--ink-faint);letter-spacing:var(--track-nav)}
 .plate .t{font-family:var(--display);font-size:clamp(19px,2.1vw,26px);white-space:nowrap}
 .plate .p{font-size:12.5px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;text-align:right}
@@ -541,20 +632,56 @@ button{font:inherit}
 
 /* ---- expanded plate / sketch items ---- */
 .plate-item{position:relative;list-style:none}
-.plate-item .plate{position:relative;padding-left:4px;transition:background-color .22s ease,padding-left .22s ease}
-.plate-item .plate-inner{display:grid;grid-template-columns:3.4em minmax(0,1fr) auto;gap:18px;align-items:baseline;width:100%}
+.plate-item .plate{position:relative;padding-left:16px;transition:background-color .22s ease,padding-left .22s ease,border-color .22s ease,box-shadow .22s ease}
+.plate-item .plate-inner{display:grid;grid-template-columns:3.4em minmax(0,1fr) auto;gap:18px;align-items:baseline;width:100%;grid-column:1/-1}
 .plate-item .plate .n{font-size:12px;color:var(--ink-faint);letter-spacing:var(--track-nav)}
 .plate-item .plate .t{font-family:var(--display);font-size:clamp(19px,2.1vw,26px);white-space:nowrap}
 .plate-item .plate .p{font-size:12.5px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;text-align:right}
+/* circular toggle arrow: down when closed / rotated up when expanded */
+.plate .plate-arrow{
+  justify-self:end;align-self:center;
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.08);
+  color:#d1d5db;cursor:pointer;flex:0 0 auto;
+  transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .3s ease;
+}
+.plate .plate-arrow svg{width:16px;height:16px;display:block;transition:transform .3s ease}
+.plate:hover .plate-arrow{background:rgba(255,255,255,.16);color:#ffffff;border-color:rgba(255,255,255,.55)}
+.plate-item.expanded .plate-arrow svg{transform:rotate(180deg)}
 @media (max-width:640px){
   .plate .t,.plate-item .plate .t{white-space:normal;overflow-wrap:anywhere}
 }
-.plate-expand{display:none;overflow:hidden;padding:0 0 0 3.4em}
-.plate-item.expanded .plate-expand{display:block;animation:plate-open .3s ease}
-@keyframes plate-open{from{opacity:0;max-height:0}to{opacity:1;max-height:600px}}
-.plate-content{padding:16px 0 20px;position:relative}
-.plate-preview{width:100%;max-width:500px;height:auto;border-radius:4px;display:block;
+.plate-expand{
+  display:grid;grid-template-rows:0fr;
+  overflow:hidden;padding:0 0 0 3.4em;
+  opacity:0;
+  transition:grid-template-rows .45s ease,opacity .35s ease;
+}
+.plate-expand>*{min-height:0}
+.plate-item.preview .plate-expand,
+.plate-item.expanded .plate-expand{grid-template-rows:1fr;opacity:1}
+.plate-content{padding:12px 0 14px;position:relative;min-height:0;overflow:hidden}
+.plate-preview{width:100%;max-width:500px;height:auto;border-radius:12px;display:block;
   box-shadow:0 2px 12px rgba(58,44,26,.15)}
+/* accordion row copy: white titles, light-gray description */
+.plate-thumbs{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 0 14px;
+  opacity:1;max-height:420px;overflow:hidden;
+  transition:opacity .3s ease,max-height .35s ease,margin .35s ease,display .35s ease;
+  transition-behavior:allow-discrete;
+}
+.plate-thumbs img{
+  width:100%;height:150px;object-fit:cover;border-radius:12px;display:block;
+  background:rgba(255,255,255,.22);
+}
+/* full expansion: fade the preview thumbnails out and remove them */
+.plate-item.expanded .plate-thumbs{opacity:0;max-height:0;margin-top:0;margin-bottom:0;display:none}
+/* the full body (gallery / Velma box) only opens on click-pin; hover shows
+   just the description + 3 thumbnails */
+.plate-body{display:none}
+.plate-item.expanded .plate-body{display:block}
 /* Section 02 (Velma): expandable placeholder until its sub-categories land */
 .plate-placeholder{margin:0;padding:26px 0 30px;font-family:var(--display);font-style:italic;
   font-size:clamp(16px,1.5vw,19px);color:var(--ink-faint);letter-spacing:.02em}
@@ -572,11 +699,11 @@ button{font:inherit}
 /* Gallery plates (01, 03-10) share the Personal Work treatment: no dash,
    and the gallery opens fully with the frame's left edge aligned under the
    first letter of the title.  Section 02 (Velma) keeps the standard slot. */
-.plate-item.pw-plate.expanded .plate-expand{animation:none;max-height:none}
+.plate-item.pw-plate.expanded .plate-expand{animation:none}
 .plate-item.pw-plate .plate-expand{padding:0 0 0 calc(3.4em + 34px)}
 .plate-item.pw-plate.expanded::before{content:none}
-.plate-item.expanded .plate{padding-left:16px}
-.plate-item.expanded .plate:hover{padding-left:20px}
+.plate-item.expanded .plate{padding-left:18px}
+.plate-item.expanded .plate:hover{padding-left:22px}
 
 /* ---- scroll progress bar for Personal Work (01) ----
    JS tracks Section 01's scroll percentage each frame (rAF-coalesced, so it
@@ -628,14 +755,14 @@ button{font:inherit}
 .pw-gallery{
   background:rgba(255,255,255,.18);
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  border-radius:20px;padding:24px;
+  border-radius:16px;padding:24px;
   border:1px solid rgba(255,255,255,.35);
   box-shadow:0 10px 30px rgba(0,0,0,.05);
   width:100%;margin:0;
 }
 .pw-masonry{display:flex;gap:14px;align-items:flex-start;width:100%}
 .pw-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:14px}
-.pw-item{margin:0;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.25)}
+.pw-item{margin:0;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.25)}
 .pw-item img{width:100%;height:auto;display:block}
 @media (max-width:560px){
   .pw-gallery{padding:14px;width:100%}
@@ -648,17 +775,19 @@ button{font:inherit}
    content (text + masonry grid) is a normal-height block that pushes following
    headers down naturally. ---- */
 .plate-item.velma-plate{overflow:hidden}
-.plate-item.velma-plate.expanded .plate-expand{animation:none;max-height:none}
+.plate-item.velma-plate.expanded .plate-expand{animation:none}
 /* keep the scribble side-dash off; the GPU-accelerated scroll progress bar stays visible */
 .plate-item.velma-plate.expanded::before{content:none}
 .plate-item.velma-plate .velma-accordion{display:block}
 .plate-item.velma-plate .velma-group{border-top:1px solid var(--hairline);display:block;height:auto;margin:0;padding:0}
 .plate-item.velma-plate .velma-head{
-  display:block;width:100%;border:0;background:transparent;cursor:pointer;color:inherit;
-  height:54px;line-height:54px;padding:0 6px;margin:0;text-align:left;
+  display:block;width:100%;border:1px solid transparent;background:transparent;cursor:pointer;
+  color:#d1d5db;
+  height:50px;line-height:50px;padding:0 16px;margin:0;text-align:left;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   font-family:var(--display);font-weight:400;font-size:clamp(17px,1.75vw,21px);letter-spacing:.012em;
-  transition:background-color .2s ease,color .2s ease;
+  border-radius:12px;
+  transition:background-color .2s ease,color .2s ease,border-color .2s ease,transform .2s ease;
 }
 .plate-item.velma-plate .velma-head-label::before{
   content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
@@ -666,14 +795,17 @@ button{font:inherit}
   border:1.5px solid var(--earth);background:rgba(154,106,62,.1);
   box-sizing:border-box;
 }
-.plate-item.velma-plate .velma-head:hover{background:rgba(255,252,244,.5)}
+.plate-item.velma-plate .velma-head:hover,
+.plate-item.velma-plate .velma-group.open .velma-head{
+  background:rgba(255,255,255,.12);color:#ffffff;border-color:rgba(255,255,255,.22);
+}
 .plate-item.velma-plate .velma-caret{
   display:inline-block;width:0;height:0;margin-left:10px;vertical-align:middle;
   border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--ink-faint);
   transform:rotate(0);transition:transform .25s ease;
 }
 .plate-item.velma-plate .velma-group.open .velma-caret{transform:rotate(180deg)}
-.plate-item.velma-plate .velma-stage{display:none;height:auto;padding:14px 0 4px;margin:0}
+.plate-item.velma-plate .velma-stage{display:none;height:auto;padding:10px 0 2px;margin:0}
 .plate-item.velma-plate .velma-group.open .velma-stage{display:block;animation:velma-stage-in .25s ease}
 @keyframes velma-stage-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .plate-item.velma-plate .velma-note{
@@ -689,7 +821,7 @@ button{font:inherit}
 }
 @keyframes velma-glow{
   0%,100%{background:rgba(255,252,244,0);box-shadow:0 0 0 0 rgba(154,106,62,0)}
-  50%{background:rgba(255,252,244,.5);box-shadow:0 0 16px 2px rgba(154,106,62,.22)}
+  50%{background:rgba(255,252,244,.2);box-shadow:0 0 16px 2px rgba(154,106,62,.22)}
 }
 @media (prefers-reduced-motion: reduce){
   .plate-item.velma-plate.expanded .velma-group.cue .velma-head{animation:none}
@@ -771,11 +903,15 @@ button{font:inherit}
   .plate-inner .n{flex:0 0 auto !important;width:auto !important;white-space:nowrap !important;writing-mode:horizontal-tb !important;word-break:normal !important;overflow-wrap:normal !important}
   .plate-inner .t{flex:1 1 0 !important;min-width:0 !important;width:auto !important;white-space:nowrap !important;writing-mode:horizontal-tb !important;word-break:normal !important;overflow-wrap:normal !important;font-size:17px}
   .plate-inner .p{display:none}
+  .plate-arrow{width:34px !important;height:34px !important}
+  .plate-arrow svg{width:14px !important;height:14px !important}
+  .plate-thumbs{gap:8px;margin-bottom:12px}
+  .plate-thumbs img{height:92px;border-radius:10px}
   .plate-expand{padding-left:0}
   .plate-item.pw-plate .plate-expand{padding-left:10px}
-  .plate-content{padding:10px 0 14px}
-  .plate-item.velma-plate .velma-head{height:44px;line-height:44px;font-size:16px}
-  .plate-item.velma-plate .velma-stage{padding:10px 0 2px}
+  .plate-content{padding:8px 0 10px}
+  .plate-item.velma-plate .velma-head{height:42px;line-height:42px;font-size:16px}
+  .plate-item.velma-plate .velma-stage{padding:8px 0 2px}
   .pw-gallery{padding:12px;border-radius:14px}
   .work-scroll-progress{display:none!important}
 
@@ -803,16 +939,27 @@ button{font:inherit}
   .foot .foot-line{order:1}
   .foot .foot-sep{display:none}
 }
+
+/* ---- dark-mode text colors (UI/UX accessibility) ---- */
+/* primary text: headings, navbar brand, titles, plate titles */
+.name,.headline h1,.section-label,.modal h2,.modal h2#contactModalTitle,.sent h3,#contactModalTitle,
+.plate .t,.plate-item .plate .t,.top .name{color:#ffffff !important}
+/* secondary text: paragraphs, bio, captions, metadata, nav links */
+.bio,.foot,.foot-line,.foot-mail,.top .menu a.link,.icon-btn,.sb-caption,.modal .sub,.modal label,.modal p,
+.sent p,#contact p,.sub,.velma-note{color:#d1d5db !important;opacity:.95}
+/* links / interactive hover states */
+.bio-link:hover,.top .menu a.link:hover,.icon-btn:hover,.foot-mail a:hover,.modal a:hover{color:#f3f4f6 !important}
 </style>
 </head>
 <body>
 <div class="wash" aria-hidden="true"></div>
+<div class="lamp-lights" aria-hidden="true">
+  <span class="lamp l"><span class="bulb"></span></span>
+  <span class="lamp r"><span class="bulb"></span></span>
+</div>
 <main class="page home">
 
   <section id="sketchbook" class="hero">
-    <img loading="eager" decoding="async" class="botany l" src="meng-to-sketchbook/botany-left.webp" alt="" aria-hidden="true">
-    <img loading="eager" decoding="async" class="botany r" src="meng-to-sketchbook/botany-right.webp" alt="" aria-hidden="true">
-
     <header class="top">
       <img loading="eager" decoding="async" fetchpriority="high" class="avatar" src="meng-to-sketchbook/adam-portrait.webp" alt="Portrait of Adam Fay" width="1385" height="1136">
       <div class="headline">
@@ -881,10 +1028,10 @@ button{font:inherit}
   <section id="about" class="about">
     <div>
       <p class="section-label">About</p>
-      <p class="bio">Adam Fay is an Art Director and Lead Character Designer renowned for bringing creatures, bold personalities and vibrant worlds to life in animation. With over a decade of experience, Adam's journey has taken him through beloved animated series including Velma, Harley Quinn, The Cuphead Show!, Final Space, Close Enough, and more, making him a major creative force behind adult animation's growing artistic depth.</p>
-      <p class="bio" style="margin-top:1em">As an Art Director at Titmouse, and Assistant Art Director and Lead Character Designer on Velma, Adam pushed forward a style infused with expressive realism, grounded anatomy, and heightened emotion marking a pivotal moment in his career. He is currently developing a new show at Amazon MGM Studios / Prime Video.</p>
+      <p class="bio" id="bioOne"></p>
+      <p class="bio" id="bioTwo"></p>
     </div>
-    <img loading="lazy" decoding="async" class="bloom" src="meng-to-sketchbook/bloom.webp" alt="" aria-hidden="true">
+    <img loading="lazy" decoding="async" class="bloom" src="meng-to-sketchbook/assets/adam-picher.webp" alt="" aria-hidden="true">
   </section>
 
   <div id="resume" class="anchor"></div>
@@ -892,7 +1039,7 @@ button{font:inherit}
   <div class="rule short" aria-hidden="true"></div>
 
   <section id="plates" class="plates">
-    <p class="section-label">Plates</p>
+    <p class="section-label">My Work</p>
     <ol class="plate-list" id="plateList"></ol>
   </section>
 

@@ -13,3 +13,11 @@
   border: 0;
   background: #ece7dc;
 }
+
+img[src*="botany-left"], img[src*="botany-right"] { display: none !important; }
+
+.botany, .botany.l, .botany.r, img.botany {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}

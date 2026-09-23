@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { BASE_PATH } from "../../../config/base-path";
 import "./styles.css";
 
 export type MengToSketchbookLandingPageProps = {
@@ -24,7 +25,7 @@ export type MengToSketchbookLandingPageProps = {
   style?: CSSProperties;
 };
 
-const SOURCE_URL = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/landing-pages/meng-to-sketchbook.html`;
+const SOURCE_URL = `${BASE_PATH}/landing-pages/meng-to-sketchbook.html`;
 
 const FONT_STACKS: Record<string, string> = {
   "instrument-serif": '"Instrument Serif", Georgia, "Times New Roman", serif',
