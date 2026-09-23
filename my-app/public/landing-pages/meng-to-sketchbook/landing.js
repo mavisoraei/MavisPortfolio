@@ -14,29 +14,6 @@ const PAGES=[1,2,3,4,5,6,7,8,9,10].map(n=>({
 }));
 PAGES.forEach(p=>p.url=DIR+p.file);
 const M=PAGES.length, LAND=6;
-/* ---- Sanity-backed "My Work" rows ---------------------------------------
-   The static rows 01-10 above stay as the curated baseline.  Extra `work`
-   documents published to the Sanity dataset (project 3at3ce71 / dataset
-   production — mirrored in .env.local and sanity/env.ts) are fetched at
-   runtime with *[_type == "work"] | order(indexNumber asc) and appended as
-   new accordion rows, each with its preview thumbnails and full-gallery
-   lightbox. ---- */
-const SANITY_WORK={
-  projectId:'3at3ce71',
-  dataset:'production',
-  apiVersion:'2026-09-22',
-};
-function sanityImageUrl(source){
-  if(!source)return null;
-  if(typeof source==='string')return source;
-  const ref=(source.asset&&source.asset._ref)||source._ref;
-  if(!ref)return null;
-  /* asset ref "image-<id>-<w>x<h>-<ext>" -> CDN url .../<id>-<w>x<h>.<ext> */
-  const m=String(ref).match(/^image-([a-z0-9_-]+)-(\d+x\d+)-([a-z0-9]+)$/i);
-  if(!m)return null;
-  return 'https://cdn.sanity.io/images/'+SANITY_WORK.projectId+'/'+
-    SANITY_WORK.dataset+'/'+m[1]+'-'+m[2]+'.'+m[3];
-}
 /* log instead of silently freezing — any runtime error anywhere is surfaced */
 window.addEventListener('error',e=>console.error('[sketchbook] runtime error:',e.error||e.message));
 window.addEventListener('unhandledrejection',e=>console.error('[sketchbook] unhandled rejection:',e.reason));
@@ -594,17 +571,11 @@ function makeGallery(folder,label,files){
   const grid=el('div','pw-masonry');
   const items=[];
   const imgs=[];
-  const seenSrcs=new Set();
-  let mounted=false;
   const api={grid:grid,progress:null,layout:function(){}};
-  function resolve(f){return /^https?:/.test(f)?f:DIR+'pic%20work/'+folder+'/'+encodeURIComponent(f)}
   files.forEach((f,fi)=>{
-    const src=resolve(f);
-    if(seenSrcs.has(src))return;
-    seenSrcs.add(src);
     const it=el('figure','pw-item');
     const im=new Image();im.loading='lazy';im.decoding='async';
-    im.dataset.src=src;
+    im.dataset.src=DIR+'pic%20work/'+folder+'/'+encodeURIComponent(f);
     im.alt=label+' '+(fi+1);
     im.addEventListener('load',balance);
     im.addEventListener('error',balance);
@@ -661,33 +632,10 @@ function makeGallery(folder,label,files){
   }
   api.layout=layout;
   api.mount=function(){
-    mounted=true;
     imgs.forEach(im=>{if(!im.getAttribute('src'))im.src=im.dataset.src;});
   };
   api.unmount=function(){
-    mounted=false;
     imgs.forEach(im=>{if(im.getAttribute('src'))im.removeAttribute('src');});
-  };
-  api.append=function(urls){
-    let added=0;
-    urls.forEach(u=>{
-      const src=resolve(u);
-      if(seenSrcs.has(src))return;
-      seenSrcs.add(src);
-      const it=el('figure','pw-item');
-      const im=new Image();im.loading='lazy';im.decoding='async';
-      im.dataset.src=src;
-      im.alt=label+' '+(items.length+1);
-      im.addEventListener('load',balance);
-      im.addEventListener('error',balance);
-      it.appendChild(im);
-      if(mounted)im.src=src;
-      items.push(it);
-      imgs.push(im);
-      added++;
-    });
-    if(added)layout();
-    return added;
   };
   return api;
 }
@@ -915,344 +863,66 @@ addEventListener('resize',()=>{
   }
 });
 
-/* ---- 3-image preview grid shown in the hover-peek state ---- */
-function buildThumbs(i){
-  const wrap=el('div','plate-thumbs');
-  wrap.setAttribute('aria-hidden','true');
-  let files=GAL_FILES[i]?GAL_FILES[i].slice(0,3):null;
-  let base=null;
-  if(!files&&i===1){files=VELMA_GROUPS[0].files.slice(0,3);base=DIR+'pic%20work/02/'+encodeURIComponent(VELMA_GROUPS[0].label)+'/';}
-  else if(files){base=DIR+'pic%20work/'+String(i+1).padStart(2,'0')+'/';}
-  if(!files||!base)return wrap;
-  files.forEach(f=>{
-    const im=new Image();im.loading='lazy';im.decoding='async';
-    im.src=/^https?:/.test(f)?f:base+encodeURIComponent(f);im.alt='';
-    wrap.appendChild(im);
-  });
-  return wrap;
-}
-
 /* ---- plate list: numbered 01-10, glassmorphic galleries on 01 and 03-10,
          role + accordion on 02 (Velma) ---- */
 const galleryState=[];
 PAGES.forEach((p,i)=>{
   const li=el('li','plate-item');
   const btn=el('button','plate');
-  btn.setAttribute('type','button');
-  btn.setAttribute('aria-expanded','false');
   btn.innerHTML='<span class="plate-inner"><span class="n">'+String(i+1).padStart(2,'0')+'</span>'+
-              '<span class="t">'+p.title+'</span>'+
-              '<span class="plate-arrow" aria-hidden="true">'+
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+
-                  '<polyline points="6 9 12 15 18 9"/>'+
-                '</svg>'+
-              '</span></span>';
+              '<span class="t">'+p.title+'</span><span class="p">'+p.place+'</span></span>';
   const expand=el('div','plate-expand');
   const content=el('div','plate-content');
-  const thumbs=buildThumbs(i);          /* 3-image preview grid */
-  content.appendChild(thumbs);
-  const body=el('div','plate-body');
   if(GAL_FILES[i]){
     const folder=String(i+1).padStart(2,'0');
     const gallery=el('div','pw-gallery');
     const state=makeGallery(folder,p.title,GAL_FILES[i]);
     gallery.appendChild(state.grid);
-    body.appendChild(gallery);
+    content.appendChild(gallery);
     galleryState[i]=state;
     li.classList.add('pw-plate');
   }else if(i===1){
-    /* Section 02 — Velma: role blurb + sub-category accordion (kept as-is) */
+    /* Section 02 — Velma: role blurb + 5 sub-category accordion */
     const vb=buildVelmaBox();
     li.classList.add('velma-plate');
-    body.appendChild(vb.box);
+    content.appendChild(vb.box);
     velmaGroups=vb.groups;
   }else{
     const img=new Image();img.loading='lazy';img.decoding='async';img.src=p.url;img.alt=p.title;img.className='plate-preview';
-    body.appendChild(img);
+    content.appendChild(img);
   }
-  content.appendChild(body);
   expand.appendChild(content);
-  li.appendChild(btn);
-  li.appendChild(expand);
-
-  const closeItem=()=>{
-    li.classList.remove('expanded');
-    btn.setAttribute('aria-expanded','false');
-    if(galleryState[i])galleryState[i].unmount();
-    syncVelmaPlate();
-    if(expandedPlate.el===li)expandedPlate.el=null;
-  };
-  const openItem=()=>{
-    if(expandedPlate.el&&expandedPlate.el!==li){
-      const prev=[...plateList.children].indexOf(expandedPlate.el);
-      if(galleryState[prev])galleryState[prev].unmount();
-      expandedPlate.el.classList.remove('expanded');
-      expandedPlate.el.querySelector('.plate').setAttribute('aria-expanded','false');
-      const pl=expandedPlate.el;
-      syncVelmaPlate();
-      if(pl.classList.contains('preview'))pl.classList.remove('preview');
-    }
-    li.classList.add('expanded');
-    btn.setAttribute('aria-expanded','true');
-    expandedPlate.el=li;
-    if(galleryState[i]){galleryState[i].mount();galleryState[i].layout();}
-    syncVelmaPlate();
-  };
-  /* CLICK — toggle the full expanded view; clicking again rotates the
-     arrow upward and collapses the section */
   btn.onclick=(e)=>{
     e.stopPropagation();
-    if(li.classList.contains('expanded')){
-      closeItem();
-      if(li.classList.contains('preview'))li.classList.remove('preview');
+    if(expandedPlate.el===li){
+      li.classList.remove('expanded');
+      expandedPlate.el=null;
+      if(galleryState[i])galleryState[i].unmount();
+      syncVelmaPlate();
     }else{
-      openItem();
+      if(expandedPlate.el){
+        const prev=[...plateList.children].indexOf(expandedPlate.el);
+        if(galleryState[prev])galleryState[prev].unmount();
+        expandedPlate.el.classList.remove('expanded');
+      }
+      li.classList.add('expanded');
+      expandedPlate.el=li;
+      if(galleryState[i]){galleryState[i].mount();galleryState[i].layout();}
+      syncVelmaPlate();
     }
   };
-  /* HOVER — peek the row's description + 3 thumbnails, closing previously
-     active items smoothly */
-  li.addEventListener('mouseenter',()=>{
-    plateList.querySelectorAll('.plate-item').forEach(other=>{
-      if(other===li)return;
-      if(other.classList.contains('preview'))other.classList.remove('preview');
-      if(other.classList.contains('expanded')){
-        const oi=[...plateList.children].indexOf(other);
-        other.classList.remove('expanded');
-        other.querySelector('.plate').setAttribute('aria-expanded','false');
-        if(galleryState[oi])galleryState[oi].unmount();
-        syncVelmaPlate();
-        if(expandedPlate.el===other)expandedPlate.el=null;
-      }
-    });
-    li.classList.add('preview');
-  });
-  li.addEventListener('mouseleave',()=>{
-    li.classList.remove('preview');
-  });
-
+  li.appendChild(btn);
+  li.appendChild(expand);
   plateList.appendChild(li);
   if(GAL_FILES[i])galleryState[i].progress=attachScrollProgress(li);
   if(i===1){velmaPlate=li;attachVelmaProgress(li);}
 });
-/* Personal Work is active on page load: only the top 3 preview thumbnails
-   render (lazy). The full gallery grid is NOT built or preloaded until the
-   row is clicked. */
-(function(){
-  const first=plateList.firstElementChild;
-  if(!first)return;
-  first.classList.add('preview');
-  const b=first.querySelector('.plate');
-  if(b)b.setAttribute('aria-expanded','false');
-})();
 addEventListener('resize',()=>{
   plateList.querySelectorAll('.plate-item.pw-plate.expanded').forEach(li=>{
     const i=[...plateList.children].indexOf(li);
     if(galleryState[i])galleryState[i].layout();
   });
 });
-
-/* ==================== dynamic rows from Sanity ==================== */
-/* A Sanity `work` doc becomes a full accordion row: same header (indexN
-   + title + toggle), 3 preview thumbnails, and a masonry full-gallery
-   with the shared lightbox.  Plumbing mirrors the static rows above. */
-function buildDynamicPlate(doc){
-  const galleryUrls=[...new Set((doc.fullGallery||[]).map(sanityImageUrl).filter(Boolean))];
-  if(!galleryUrls.length)return null;
-  const previewUrls=[...new Set((doc.previewImages||[]).map(sanityImageUrl).filter(Boolean))].slice(0,3);
-  const li=el('li','plate-item');
-  const btn=el('button','plate');
-  btn.setAttribute('type','button');
-  btn.setAttribute('aria-expanded','false');
-  const inner=el('span','plate-inner');
-  const n=el('span','n');n.textContent=String(doc.indexNumber||'').trim();
-  const t=el('span','t');t.textContent=doc.title||'';
-  const arrow=el('span','plate-arrow');arrow.setAttribute('aria-hidden','true');
-  arrow.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
-  inner.appendChild(n);inner.appendChild(t);inner.appendChild(arrow);
-  btn.appendChild(inner);
-
-  const expand=el('div','plate-expand');
-  const content=el('div','plate-content');
-  const thumbs=el('div','plate-thumbs');thumbs.setAttribute('aria-hidden','true');
-  previewUrls.forEach(u=>{
-    const im=new Image();im.loading='lazy';im.decoding='async';im.src=u;im.alt='';
-    thumbs.appendChild(im);
-  });
-  content.appendChild(thumbs);
-  const body=el('div','plate-body');
-  const gallery=el('div','pw-gallery');
-  const state=makeGallery('',t.textContent,galleryUrls);
-  gallery.appendChild(state.grid);
-  body.appendChild(gallery);
-  content.appendChild(body);
-  expand.appendChild(content);
-  li.appendChild(btn);li.appendChild(expand);
-  li.classList.add('pw-plate');
-
-  const closeDyn=()=>{
-    li.classList.remove('expanded');
-    btn.setAttribute('aria-expanded','false');
-    state.unmount();
-    if(expandedPlate.el===li)expandedPlate.el=null;
-  };
-  const openDyn=()=>{
-    if(expandedPlate.el&&expandedPlate.el!==li){
-      const prev=[...plateList.children].indexOf(expandedPlate.el);
-      if(galleryState[prev])galleryState[prev].unmount();
-      expandedPlate.el.classList.remove('expanded');
-      const pb=expandedPlate.el.querySelector('.plate');if(pb)pb.setAttribute('aria-expanded','false');
-      const pl=expandedPlate.el;
-      syncVelmaPlate();
-      if(pl.classList.contains('preview'))pl.classList.remove('preview');
-    }
-    li.classList.add('expanded');
-    btn.setAttribute('aria-expanded','true');
-    expandedPlate.el=li;
-    state.mount();state.layout();
-    syncVelmaPlate();
-  };
-  btn.onclick=e=>{
-    e.stopPropagation();
-    if(li.classList.contains('expanded')){closeDyn();if(li.classList.contains('preview'))li.classList.remove('preview');}
-    else openDyn();
-  };
-  li.addEventListener('mouseenter',()=>{
-    plateList.querySelectorAll('.plate-item').forEach(other=>{
-      if(other===li)return;
-      if(other.classList.contains('preview'))other.classList.remove('preview');
-      if(other.classList.contains('expanded')){
-        const oi=[...plateList.children].indexOf(other);
-        other.classList.remove('expanded');
-        const ob=other.querySelector('.plate');if(ob)ob.setAttribute('aria-expanded','false');
-        if(galleryState[oi])galleryState[oi].unmount();
-        syncVelmaPlate();
-        if(expandedPlate.el===other)expandedPlate.el=null;
-      }
-    });
-    li.classList.add('preview');
-  });
-  li.addEventListener('mouseleave',()=>{li.classList.remove('preview');});
-
-  plateList.appendChild(li);
-  state.progress=attachScrollProgress(li);
-  galleryState[plateList.children.length-1]=state;
-  return li;
-}
-
-function mkIndex(v){
-  const s=String(v||'').trim();
-  if(/^\d+$/.test(s))return String(parseInt(s,10)).padStart(2,'0');
-  return s.toLowerCase();
-}
-function appendThumbs(li,urls){
-  const wrap=li.querySelector('.plate-thumbs');
-  if(!wrap)return;
-  const seen=new Set();
-  wrap.querySelectorAll('img').forEach(im=>{
-    const s=im.getAttribute('src')||im.getAttribute('data-src');
-    if(s)seen.add(s);
-  });
-  urls.forEach(u=>{
-    if(seen.has(u))return;
-    seen.add(u);
-    const im=new Image();im.loading='lazy';im.decoding='async';im.src=u;im.alt='';
-    wrap.appendChild(im);
-  });
-}
-function appendVelmaGroup(plate,urls,title){
-  const acc=plate.querySelector('.velma-accordion');
-  if(!acc||!urls.length)return 0;
-  const label=title||'Studio Gallery';
-  const group=el('div','velma-group');
-  const head=el('button','velma-head');
-  head.setAttribute('type','button');
-  head.setAttribute('aria-expanded','false');
-  head.innerHTML='<span class="velma-head-label">'+label+'</span><span class="velma-caret" aria-hidden="true"></span>';
-  const stage=el('div','velma-stage');
-  const gallery=el('div','pw-gallery velma-gallery');
-  const state=makeGallery('02/'+encodeURIComponent(label),label,urls);
-  gallery.appendChild(state.grid);
-  stage.appendChild(gallery);
-  group.appendChild(head);
-  group.appendChild(stage);
-  head.onclick=()=>{
-    const open=group.classList.toggle('open');
-    head.setAttribute('aria-expanded',open?'true':'false');
-    if(open){group.classList.remove('cue');state.mount();state.layout();}
-    else{state.unmount();}
-    if(window.velmaBarUpdate)window.velmaBarUpdate();
-  };
-  acc.appendChild(group);
-  if(velmaGroups)velmaGroups.push({group:group,stage:stage,state:state,label:label});
-  return urls.length;
-}
-
-function loadSanityWork(){
-  if(loadSanityWork.done)return;
-  loadSanityWork.done=true;
-  const query='*[_type == "work"] | order(indexNumber asc)';
-  const url='https://'+SANITY_WORK.projectId+'.apicdn.sanity.io/v'+
-    SANITY_WORK.apiVersion+'/data/query/'+SANITY_WORK.dataset+
-    '?query='+encodeURIComponent(query);
-  fetch(url,{headers:{Accept:'application/json'}})
-    .then(r=>{if(!r.ok)throw new Error('Sanity query failed ('+r.status+')');return r.json();})
-    .then(json=>{
-      const docs=((json&&json.result)||[]).filter(d=>d&&d._type==='work');
-      const rows={};
-      const seen=new Set();
-      plateList.querySelectorAll('.plate-item').forEach(li=>{
-        const nEl=li.querySelector('.n');
-        const n=mkIndex(nEl&&nEl.textContent);
-        if(!n)return;
-        const index=[...plateList.children].indexOf(li);
-        rows[n]={li:li,index:index,state:galleryState[index],isVelma:li.classList.contains('velma-plate')};
-        seen.add(n);
-      });
-      let added=0,merged=0;
-      docs.forEach(doc=>{
-        const idx=mkIndex(doc.indexNumber);
-        if(!idx)return;
-        const previewUrls=[...new Set((doc.previewImages||[]).map(sanityImageUrl).filter(Boolean))];
-        const galleryUrls=[...new Set((doc.fullGallery||[]).map(sanityImageUrl).filter(Boolean))];
-        const row=rows[idx];
-        if(row){
-          /* matching local row: append, never overwrite */
-          let changed=false;
-          if(previewUrls.length){
-            const before=row.li.querySelectorAll('.plate-thumbs img').length;
-            appendThumbs(row.li,previewUrls);
-            if(row.li.querySelectorAll('.plate-thumbs img').length>before)changed=true;
-          }
-          if(galleryUrls.length){
-            if(row.state&&typeof row.state.append==='function'){
-              if(row.state.append(galleryUrls)>0)changed=true;
-            }else if(row.isVelma){
-              if(appendVelmaGroup(row.li,galleryUrls,doc.title)>0)changed=true;
-            }
-          }
-          if(changed)merged++;
-          return;
-        }
-        /* completely new indexNumber — render a fresh accordion row */
-        if(seen.has(idx))return;
-        const li=buildDynamicPlate(doc);
-        if(!li)return;
-        seen.add(idx);added++;
-        const index=[...plateList.children].indexOf(li);
-        rows[idx]={li:li,index:index,state:galleryState[index],isVelma:false};
-      });
-      if(added>0||merged>0)console.info('[sketchbook] merged',merged,'row(s) & appended',added,'new row(s) from Sanity');
-    })
-    .catch(err=>{
-      const msg=err&&err.message||err;
-      const corsHint=/Failed to fetch|NetworkError|CORS/i.test(String(msg))
-        ? ' — add this site root origin to Sanity › API › CORS origins (project 3at3ce71) to load work rows here'
-        : '';
-      console.warn('[sketchbook] Sanity work fetch skipped, static rows remain active:',msg+corsHint);
-    });
-}
-setTimeout(loadSanityWork,0);
-
 function marks(){
   const cur=turn?turn.to:idx;
   plateList.querySelectorAll('.plate').forEach((b,i)=>b.setAttribute('aria-current',i===cur?'true':'false'));
@@ -1440,60 +1110,5 @@ endIntro=function(){origEndIntro();setTimeout(startAutoFlip,500);};
     if(e.key==='Escape')close();
     else if(e.key==='ArrowLeft'){e.preventDefault();step(-1);}
     else if(e.key==='ArrowRight'){e.preventDefault();step(1);}
-  });
-})();
-/* ---- glowing bio: char-by-char reveal (mirrors GlowingText) ---- */
-(function(){
-  var START_DELAY=0.2, STAGGER=0.02, DURATION=0.5, LINE_GAP=0.15;
-  var BIO_TEXT=[
-    "Adam Fay is an Art Director and Lead Character Designer renowned for bringing creatures, bold personalities and vibrant worlds to life in animation. With over a decade of experience, Adam's journey has taken him through beloved animated series including Velma, Harley Quinn, The Cuphead Show!, Final Space, Close Enough, and more, making him a major creative force behind adult animation's growing artistic depth.",
-    "As an Art Director at Titmouse, and Assistant Art Director and Lead Character Designer on Velma, Adam pushed forward a style infused with expressive realism, grounded anatomy, and heightened emotion marking a pivotal moment in his career. He is currently developing a new show at Amazon MGM Studios / Prime Video."
-  ];
-  function tokenize(value){
-    var matches=value.match(/\s+|\S+/g)||[];
-    var offset=0;
-    return matches.map(function(text){
-      var start=offset;
-      offset+=Array.from(text).length;
-      return{text:text,isSpace:/^\s/.test(text),start:start};
-    });
-  }
-  var containers=[].slice.call(document.querySelectorAll('#about .bio'));
-  if(!containers.length)return;
-  var tokens=BIO_TEXT.map(function(block){return tokenize(block);});
-  var charDelays=[];
-  var elapsed=START_DELAY;
-  tokens.forEach(function(line){
-    var count=0;
-    line.forEach(function(t){count+=Array.from(t.text).length;});
-    var delays=[];
-    for(var i=0;i<count;i++)delays.push(elapsed+i*STAGGER);
-    var lineDuration=count>0?(count-1)*STAGGER+DURATION:0;
-    elapsed+=lineDuration+Math.max(LINE_GAP,0);
-    charDelays.push(delays);
-  });
-  tokens.forEach(function(line,li){
-    var host=containers[li];
-    host.classList.add('bio-glow');
-    line.forEach(function(token,ti){
-      if(token.isSpace){
-        var sp=document.createElement('span');
-        sp.textContent=token.text;
-        host.appendChild(sp);
-        return;
-      }
-      var word=document.createElement('span');
-      word.className='glowing-text-word';
-      Array.from(token.text).forEach(function(ch,ci){
-        var c=document.createElement('span');
-        c.className='glowing-text-char';
-        c.setAttribute('aria-hidden','true');
-        c.style.setProperty('--char-delay',charDelays[li][token.start+ci].toFixed(2)+'s');
-        c.style.setProperty('--char-duration',DURATION.toFixed(2)+'s');
-        c.textContent=ch;
-        word.appendChild(c);
-      });
-      host.appendChild(word);
-    });
   });
 })();
